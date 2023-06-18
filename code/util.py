@@ -5,10 +5,13 @@ from sklearn.model_selection import train_test_split
 import sys
 import warnings
 import dill
+import dhg
 from collections import Counter
 from rdkit import Chem
 from collections import defaultdict
 import torch
+from rdkit import Chem
+from rdkit.Chem import BRICS
 warnings.filterwarnings('ignore')
 
 def get_n_params(model):
@@ -24,7 +27,6 @@ def get_n_params(model):
 def llprint(message):
     sys.stdout.write(message)
     sys.stdout.flush()
-
 
 def transform_split(X, Y):
     x_train, x_eval, y_train, y_eval = train_test_split(X, Y, train_size=2/3, random_state=1203)
@@ -235,7 +237,7 @@ def multi_label_metric(y_gt, y_pred, y_prob):
 
     return ja, prauc, np.mean(avg_prc), np.mean(avg_recall), np.mean(avg_f1)
 
-def ddi_rate_score(record, path='../data/ddi_A_final.pkl'):
+def ddi_rate_score(record, path='../data_ATC4/ADDI.pkl'):
     # ddi rate
     ddi_A = dill.load(open(path, 'rb'))
     all_cnt = 0
@@ -248,18 +250,13 @@ def ddi_rate_score(record, path='../data/ddi_A_final.pkl'):
                     if j <= i:
                         continue
                     all_cnt += 1
-                    if ddi_A[med_i, med_j] == 1 or ddi_A[med_j, med_i] == 1:
+                    if ddi_A[med_i, med_j] != 0 or ddi_A[med_j, med_i] != 0:
                         dd_cnt += 1
     if all_cnt == 0:
         return 0
     return dd_cnt / all_cnt
 
-
-def create_atoms(mol, atom_dict):
-    """Transform the atom types in a molecule (e.g., H, C, and O)
-    into the indices (e.g., H=0, C=1, and O=2).
-    Note that each atom index considers the aromaticity.
-    """
+def create_atoms(mol, atom_dict):    
     atoms = [a.GetSymbol() for a in mol.GetAtoms()]
     for a in mol.GetAromaticAtoms():
         i = a.GetIdx()
@@ -268,10 +265,6 @@ def create_atoms(mol, atom_dict):
     return np.array(atoms)
 
 def create_ijbonddict(mol, bond_dict):
-    """Create a dictionary, in which each key is a node ID
-    and each value is the tuples of its neighboring node
-    and chemical bond (e.g., single and double) IDs.
-    """
     i_jbond_dict = defaultdict(lambda: [])
     for b in mol.GetBonds():
         i, j = b.GetBeginAtomIdx(), b.GetEndAtomIdx()
@@ -282,9 +275,6 @@ def create_ijbonddict(mol, bond_dict):
 
 def extract_fingerprints(radius, atoms, i_jbond_dict,
                          fingerprint_dict, edge_dict):
-    """Extract the fingerprints from a molecular graph
-    based on Weisfeiler-Lehman algorithm.
-    """
 
     if (len(atoms) == 1) or (radius == 0):
         nodes = [fingerprint_dict[a] for a in atoms]
@@ -320,7 +310,7 @@ def extract_fingerprints(radius, atoms, i_jbond_dict,
     return np.array(nodes)
 
 
-def buildMPNN(molecule, med_voc, radius=1, device="cpu:0"):
+def GraphMPNN(molecule, med_voc, radius=1, device="cpu:0"):
 
     atom_dict = defaultdict(lambda: len(atom_dict))
     bond_dict = defaultdict(lambda: len(bond_dict))
@@ -328,7 +318,8 @@ def buildMPNN(molecule, med_voc, radius=1, device="cpu:0"):
     edge_dict = defaultdict(lambda: len(edge_dict))
     MPNNSet, average_index = [], []
 
-    print (len(med_voc.items()))
+    print('----- Initiate MPNN Nodes and Edges -----')
+    # print (len(med_voc.items()))
     for index, ndc in med_voc.items():
 
         smilesList = list(molecule[ndc])
@@ -368,7 +359,81 @@ def buildMPNN(molecule, med_voc, radius=1, device="cpu:0"):
     average_projection = np.zeros((n_row, n_col))
     col_counter = 0
     for i, item in enumerate(average_index):
-        average_projection[i, col_counter : col_counter + item] = 1 / item
-        col_counter += item
+        try:
+            average_projection[i, col_counter : col_counter + item] = 1 / item
+            col_counter += item
+        except:
+            continue
 
     return MPNNSet, N_fingerprint, torch.FloatTensor(average_projection)
+
+
+class GCNConv(nn.Module):
+    def __init__(self,):
+        super().__init__()
+        ...
+        self.reset_parameters()
+
+    def forward(self, X: torch.Tensor, g: dhg.Graph) -> torch.Tensor:
+        # apply the trainable parameters ``theta`` to the input ``X``  
+        X = self.theta(X)
+        # smooth the input ``X`` with the GCN's Laplacian
+        X = g.smoothing_with_GCN(X)
+        X = F.relu(X)
+        return X
+    
+class HGNNConv(nn.Module):
+    def __init__(self,):
+        super().__init__()
+        ...
+        self.reset_parameters()
+
+    def forward(self, X: torch.Tensor, hg: dhg.Hypergraph) -> torch.Tensor:
+        # apply the trainable parameters ``theta`` to the input ``X``
+        X = self.theta(X)
+        # smooth the input ``X`` with the HGNN's Laplacian
+        X = hg.smoothing_with_HGNN(X)
+        X = F.relu(X)
+        return X
+    
+class HGNNPConv(nn.Module):
+    def __init__(self,):
+        super().__init__()
+        ...
+        self.reset_parameters()
+
+    def forward(self, X: torch.Tensor, hg: dhg.Hypergraph) -> torch.Tensor:
+        # apply the trainable parameters ``theta`` to the input ``X``
+        X = self.theta(X)
+        # perform vertex->hyperedge->vertex message passing in hypergraph
+        #  with message passing function ``v2v``, which is the combination
+        #  of message passing function ``v2e()`` and ``e2v()``
+        X = hg.v2v(X, aggr="mean")
+        X = F.relu(X)
+        return X
+
+
+def print_execute_time(func):
+    from time import time
+    num = 0
+    def wrapper(*args, **kwargs):
+        nonlocal num
+        num += 1
+
+        start = time()
+        func_return = func(*args, **kwargs)
+        end = time()
+        opera_time =  end - start
+        if opera_time >3600:
+            print()
+            print(f'{func.__name__}() execute time: {round(opera_time/3600, 3)}h, and run: {num} time.')
+        elif opera_time >60:
+            print()
+            print(f'{func.__name__}() execute time: {round(opera_time/60, 3)}m, and run: {num} time.')
+        else:
+            print()
+            print(f'{func.__name__}() execute time: {round(opera_time, 3)}s, and run: {num} time.')
+
+        return func_return
+
+    return wrapper
