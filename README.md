@@ -72,7 +72,7 @@ gzip -d DIAGNOSES_ICD.csv.gz  # Diagnosis information
         - **Retain.py**
         - **processdata_new.py**
         - **Pre-trainMPNN.py**
-        - **proposedmethod.py**
+        - **proposedmethod.py**: Our method.
     - Setting file
         - **model.py**
         - **SafeDrug_model.py**
@@ -98,6 +98,15 @@ gzip -d DIAGNOSES_ICD.csv.gz  # Diagnosis information
 #max of procedures  50
 #max of visit  29
 ```
+
+### 5. Run the code
+
+```python
+python proposedmethod.py
+```
+usage: proposedmethod.py [-h] [--Test] [--model_name MODEL_NAME]
+                   [--resume_path RESUME_PATH] [--lr LR]
+                   [--target_addi TARGET_ADDI] [--target_sddi TARGET_SDDI] [--kp KP] [--dim DIM]
 
 ### 4. Tips
 Welcome to contact me jialunwu96@163.com for any question.
