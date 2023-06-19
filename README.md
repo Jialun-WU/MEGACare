@@ -99,7 +99,7 @@ gzip -d DIAGNOSES_ICD.csv.gz  # Diagnosis information
 #max of visit  29
 ```
 
-### 5. Run the code
+### 5. Run our project
 
 ```python
 python proposedmethod.py
