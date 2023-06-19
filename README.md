@@ -56,7 +56,7 @@ gzip -d DIAGNOSES_ICD.csv.gz  # Diagnosis information
         - **records_final.pkl**: we only provide the first 100 entries as examples here. We cannot distribute the whole MIMIC-III data.
         - **voc_final.pkl**
 - ```src/```
-    - baselines:
+    - Baselines:
         - **LR.py**
         - **CNN.py**
         - **RNN.py**
@@ -73,7 +73,7 @@ gzip -d DIAGNOSES_ICD.csv.gz  # Diagnosis information
         - **processdata_new.py**
         - **Pre-trainMPNN.py**
         - **proposedmethod.py**
-    - setting file
+    - Setting file
         - **model.py**
         - **SafeDrug_model.py**
         - **COGNet_model.py**
