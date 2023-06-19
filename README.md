@@ -40,8 +40,7 @@ gzip -d DIAGNOSES_ICD.csv.gz  # Diagnosis information
 
 ### 4. Folder Specification
 - ```data/```
-    - **procesing.py** 
-    - ```Input/``` 
+    - Input:
         - **PRESCRIPTIONS.csv**
         - **DIAGNOSES_ICD.csv**
         - **PROCEDURES_ICD.csv**
@@ -50,7 +49,7 @@ gzip -d DIAGNOSES_ICD.csv.gz  # Diagnosis information
         - **ndc2RXCUI.txt**
         - **drugbank_drugs_info.csv**
         - **drug-DDI.csv**
-    - ```Output/```
+    - Output:
         - **atc3toSMILES.pkl**
         - **ADDI.pkl**
         - **SDDI.pkl**
@@ -101,4 +100,4 @@ gzip -d DIAGNOSES_ICD.csv.gz  # Diagnosis information
 ```
 
 ### 4. Tips
-Welcome to contact me for any question.
+Welcome to contact me jialunwu96@163.com for any question.
