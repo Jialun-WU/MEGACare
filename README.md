@@ -104,9 +104,9 @@ gzip -d DIAGNOSES_ICD.csv.gz  # Diagnosis information
 ```python
 python proposedmethod.py
 ```
-usage: proposedmethod.py [-h] [--Test] [--model_name MODEL_NAME]
-                   [--resume_path RESUME_PATH] [--lr LR]
-                   [--target_addi TARGET_ADDI] [--target_sddi TARGET_SDDI] [--kp KP] [--dim DIM]
+    usage: proposedmethod.py [-h] [--Test] [--model_name MODEL_NAME]
+                       [--resume_path RESUME_PATH] [--lr LR]
+                       [--target_addi TARGET_ADDI] [--target_sddi TARGET_SDDI] [--kp KP] [--dim DIM]
 
 ### 4. Tips
 Welcome to contact me jialunwu96@163.com for any question.
